@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "SendSafe",
+  "version": "1.0.0",
+  "description": "Detects AI-generated copy-paste artifacts in Gmail before you send",
+  
+  "permissions": [
+    "notifications"
+  ],
+  
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["dist/contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  }
+}
+
