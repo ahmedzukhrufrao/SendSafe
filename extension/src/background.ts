@@ -6,13 +6,18 @@
 // WHAT THIS SCRIPT DOES:
 // 1. Receives messages from content script (when user pastes)
 // 2. Calls the backend API to check for AI traces
-// 3. Shows Chrome notifications with results
+// 3. Sends results back to content script to display in-page modal alert
 // 4. Handles errors and edge cases
 //
 // SERVICE WORKER vs BACKGROUND PAGE:
 // - Manifest V3 uses service workers (event-driven, can sleep)
 // - Manifest V2 used background pages (always running)
 // - Service workers wake up when needed, then sleep to save resources
+//
+// ALERT FLOW (Updated):
+// - Previously: Background → chrome.notifications → OS notification center
+// - Now: Background → chrome.tabs.sendMessage → Content script → In-page modal
+// - This gives us full control over the alert's appearance and behavior
 // ============================================================================
 
 import { config } from './config';
@@ -31,11 +36,29 @@ interface PasteDetectedMessage {
 }
 
 /**
- * Response we send back to content script
+ * Response we send back to content script (for the original message acknowledgment)
  */
 interface MessageResponse {
   success: boolean;
   error?: string;
+}
+
+/**
+ * Message sent TO content script to show the in-page alert modal
+ * 
+ * This is a NEW message type that tells the content script to display
+ * our custom dark-themed modal instead of using OS notifications.
+ * 
+ * Why we do this:
+ * - OS notifications have limited styling (can't customize colors, fonts, layout)
+ * - In-page modals give us full control over appearance
+ * - Better user experience - alert appears right where the user is working
+ */
+interface ShowAlertMessage {
+  type: 'SHOW_ALERT';           // Message type identifier
+  alertType: 'warning' | 'error'; // What kind of alert to show
+  result?: APISuccessResponse;   // Detection result (for warning alerts)
+  errorMessage?: string;         // Error message (for error alerts)
 }
 
 /**
@@ -89,10 +112,32 @@ chrome.runtime.onMessage.addListener(
     if (message.type === 'PASTE_DETECTED') {
       console.log('SendSafe: Received paste detection message');
       
+      // -----------------------------------------------------------------------
+      // Get the tab ID from the sender
+      // -----------------------------------------------------------------------
+      // sender.tab contains information about the tab that sent the message
+      // We need the tab ID to send the alert back to the correct tab
+      // 
+      // Why we need this:
+      // - User might have multiple Gmail tabs open
+      // - We need to show the alert in the same tab where they pasted
+      // - chrome.tabs.sendMessage() requires a tab ID to know where to send
+      const tabId = sender.tab?.id;
+      
+      // If we can't determine which tab sent the message, we can't show the alert
+      // This shouldn't happen in normal use, but we handle it gracefully
+      if (!tabId) {
+        console.error('SendSafe: Could not determine sender tab ID');
+        sendResponse({ success: false, error: 'Could not determine sender tab' });
+        return true;
+      }
+      
       // Handle the paste asynchronously
       // We can't use async/await directly in the listener, so we
       // call an async function and handle the response
-      handlePasteDetection(message as PasteDetectedMessage)
+      // 
+      // We pass tabId so the handler knows where to send the alert
+      handlePasteDetection(message as PasteDetectedMessage, tabId)
         .then(() => {
           // Success - send positive response
           sendResponse({ success: true });
@@ -121,36 +166,71 @@ chrome.runtime.onMessage.addListener(
 // ---------------------------------------------------------------------------
 
 /**
- * Handles paste detection by calling backend API and showing notifications
+ * Handles paste detection by calling backend API and sending alert to content script
+ * 
+ * FLOW:
+ * 1. Call backend API with the pasted text
+ * 2. If AI traces detected → Send SHOW_ALERT message to content script
+ * 3. If no AI traces → Do nothing (per PRD requirement)
+ * 4. If error → Send error alert to content script
  * 
  * @param message - The paste detection message from content script
+ * @param tabId - The ID of the tab to send the alert to
  */
-async function handlePasteDetection(message: PasteDetectedMessage): Promise<void> {
-  console.log(`SendSafe: Analyzing ${message.text.length} characters`);
+async function handlePasteDetection(message: PasteDetectedMessage, tabId: number): Promise<void> {
+  // -------------------------------------------------------------------------
+  // PERFORMANCE TIMING: Track total time for the entire flow
+  // -------------------------------------------------------------------------
+  const totalStartTime = performance.now();
+  console.log(`SendSafe: ⏱️ [TIMING] Starting analysis of ${message.text.length} characters`);
   
   try {
     // -----------------------------------------------------------------------
     // Step 1: Call backend API
     // -----------------------------------------------------------------------
+    const apiStartTime = performance.now();
     const result = await callBackendAPI(message.text);
+    const apiEndTime = performance.now();
+    
+    console.log(`SendSafe: ⏱️ [TIMING] Backend API call took ${(apiEndTime - apiStartTime).toFixed(0)}ms`);
     
     // -----------------------------------------------------------------------
-    // Step 2: Show notification based on result
+    // Step 2: Send alert to content script based on result
     // -----------------------------------------------------------------------
     if (result.aiFlag) {
-      // AI traces detected - show warning
-      await showWarningNotification(result);
+      // AI traces detected - send warning alert to content script
+      // The content script will display the in-page modal
+      const alertStartTime = performance.now();
+      await sendAlertToContentScript(tabId, 'warning', result);
+      const alertEndTime = performance.now();
+      
+      console.log(`SendSafe: ⏱️ [TIMING] Sending alert to content script took ${(alertEndTime - alertStartTime).toFixed(0)}ms`);
     } else {
       // No AI traces - show nothing (per PRD requirement)
-      console.log('SendSafe: No AI traces detected, no notification shown');
+      // We don't want to interrupt users when everything is fine
+      console.log('SendSafe: No AI traces detected, no alert shown');
     }
+    
+    // Log total time
+    const totalEndTime = performance.now();
+    console.log(`SendSafe: ⏱️ [TIMING] TOTAL processing time: ${(totalEndTime - totalStartTime).toFixed(0)}ms`);
     
   } catch (error) {
     // -----------------------------------------------------------------------
-    // Step 3: Handle errors
+    // Step 3: Handle errors by sending error alert
     // -----------------------------------------------------------------------
+    const totalEndTime = performance.now();
     console.error('SendSafe: Error during analysis:', error);
-    await showErrorNotification(error);
+    console.log(`SendSafe: ⏱️ [TIMING] Error occurred after ${(totalEndTime - totalStartTime).toFixed(0)}ms`);
+    
+    // Extract error message for display
+    // We show user-friendly messages, not technical details
+    let errorMessage = 'An error occurred while checking the text.';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    await sendAlertToContentScript(tabId, 'error', undefined, errorMessage);
   }
 }
 
@@ -269,86 +349,75 @@ async function callBackendAPI(text: string): Promise<APISuccessResponse> {
 }
 
 // ---------------------------------------------------------------------------
-// Notification Functions
+// Alert Communication Functions
+// ---------------------------------------------------------------------------
+// Instead of using Chrome's system notifications, we now send messages back
+// to the content script which displays a custom in-page modal.
+//
+// WHY THIS CHANGE:
+// - System notifications appear in OS notification center (limited styling)
+// - In-page modals appear directly in Gmail (full styling control)
+// - Better UX: alert is right where the user is working
+// - Dark theme with orange accent matches modern design
 // ---------------------------------------------------------------------------
 
 /**
- * Shows a warning notification when AI traces are detected
+ * Sends an alert message to the content script to display the in-page modal
  * 
- * @param result - The detection result from the backend
- */
-async function showWarningNotification(result: APISuccessResponse): Promise<void> {
-  console.log('SendSafe: Showing warning notification');
-  
-  // -------------------------------------------------------------------------
-  // Build notification message
-  // -------------------------------------------------------------------------
-  
-  // Start with main warning
-  let message = `AI copy-paste artifacts detected (${result.confidence} confidence)`;
-  
-  // Add categories if any found
-  if (result.categoriesFound.length > 0) {
-    message += `\n\nCategories: ${result.categoriesFound.join(', ')}`;
-  }
-  
-  // Add indicator count
-  if (result.indicators.length > 0) {
-    message += `\n\n${result.indicators.length} indicator${result.indicators.length > 1 ? 's' : ''} found`;
-  }
-  
-  // Add first indicator as example (if available)
-  if (result.indicators.length > 0 && result.indicators[0].snippet) {
-    const firstSnippet = result.indicators[0].snippet;
-    // Truncate if too long
-    const snippetPreview = firstSnippet.length > 50 
-      ? firstSnippet.substring(0, 50) + '...'
-      : firstSnippet;
-    message += `\n\nExample: "${snippetPreview}"`;
-  }
-  
-  // -------------------------------------------------------------------------
-  // Create notification
-  // -------------------------------------------------------------------------
-  
-  // chrome.notifications.create() shows a system notification
-  // These appear in the system notification area (Windows Action Center, macOS Notification Center, etc.)
-  await chrome.notifications.create({
-    type: 'basic',                    // Notification type (basic = simple text)
-    iconUrl: config.notifications.iconPath,  // Icon to show
-    title: '⚠️ AI Traces Detected in Pasted Content',     // Notification title
-    message: message,                 // Notification body text
-    priority: 2,                      // Priority (0=lowest, 2=highest)
-    requireInteraction: false,  // Auto-dismiss after ~10 seconds (PRD FR-4.6, DS-1)
-  });
-}
-
-/**
- * Shows an error notification when something goes wrong
+ * This function uses chrome.tabs.sendMessage() to communicate with the
+ * content script running in the specified tab. The content script will
+ * receive this message and display the appropriate modal.
  * 
- * @param error - The error that occurred
+ * HOW IT WORKS:
+ * 1. Background script calls this function with alert details
+ * 2. chrome.tabs.sendMessage() sends message to the specific tab
+ * 3. Content script's message listener receives the message
+ * 4. Content script creates and displays the modal
+ * 
+ * @param tabId - The ID of the tab to send the alert to
+ * @param alertType - 'warning' for AI traces detected, 'error' for errors
+ * @param result - The detection result (only for warning alerts)
+ * @param errorMessage - The error message (only for error alerts)
  */
-async function showErrorNotification(error: any): Promise<void> {
-  console.log('SendSafe: Showing error notification');
+async function sendAlertToContentScript(
+  tabId: number,
+  alertType: 'warning' | 'error',
+  result?: APISuccessResponse,
+  errorMessage?: string
+): Promise<void> {
+  console.log(`SendSafe: Sending ${alertType} alert to tab ${tabId}`);
   
-  // Extract error message
-  let errorMessage = 'An error occurred while checking the text.';
+  // -------------------------------------------------------------------------
+  // Build the message to send to content script
+  // -------------------------------------------------------------------------
+  // The ShowAlertMessage interface defines what data we send
+  // Content script will use this data to build the modal
   
-  if (error instanceof Error) {
-    errorMessage = error.message;
-  } else if (typeof error === 'string') {
-    errorMessage = error;
+  const alertMessage: ShowAlertMessage = {
+    type: 'SHOW_ALERT',      // Message type identifier (content script checks this)
+    alertType: alertType,     // 'warning' or 'error'
+    result: result,           // Detection result (undefined for errors)
+    errorMessage: errorMessage, // Error message (undefined for warnings)
+  };
+  
+  // -------------------------------------------------------------------------
+  // Send message to the content script
+  // -------------------------------------------------------------------------
+  // chrome.tabs.sendMessage() is different from chrome.runtime.sendMessage():
+  // - chrome.runtime.sendMessage() → Sends to background script
+  // - chrome.tabs.sendMessage() → Sends to content script in specific tab
+  //
+  // We need the tab ID to know which Gmail tab should show the alert
+  // (user might have multiple Gmail tabs open)
+  
+  try {
+    await chrome.tabs.sendMessage(tabId, alertMessage);
+    console.log('SendSafe: Alert message sent successfully');
+  } catch (error) {
+    // If sending fails (e.g., tab was closed), log the error
+    // We don't want to crash the extension if the tab is gone
+    console.error('SendSafe: Failed to send alert to content script:', error);
   }
-  
-  // Create notification
-  await chrome.notifications.create({
-    type: 'basic',
-    iconUrl: config.notifications.iconPath,
-    title: '❌ SendSafe Error',
-    message: errorMessage,
-    priority: 1,
-    requireInteraction: false,
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -396,12 +465,13 @@ chrome.runtime.onStartup.addListener(() => {
  * 1. Service worker starts (on extension load or when needed)
  * 2. Registers message listener
  * 3. Waits for messages from content script
- * 4. When message arrives:
+ * 4. When PASTE_DETECTED message arrives:
  *    a. Validates message type
- *    b. Calls backend API
- *    c. Parses response
- *    d. Shows notification
- *    e. Sends response back to content script
+ *    b. Extracts sender tab ID
+ *    c. Calls backend API
+ *    d. Parses response
+ *    e. Sends SHOW_ALERT message back to content script
+ *    f. Content script displays in-page modal
  * 5. Service worker may sleep if idle for 30 seconds
  * 6. Wakes up when new message arrives
  * 
@@ -424,9 +494,10 @@ chrome.runtime.onStartup.addListener(() => {
  * - Receives messages from content scripts
  * - Allows communication between different parts of extension
  * 
- * chrome.notifications
- * - Shows system notifications
- * - Requires "notifications" permission in manifest
+ * chrome.tabs.sendMessage
+ * - Sends messages TO content scripts in specific tabs
+ * - Used to tell content script to show the in-page modal
+ * - Requires tab ID to know which tab to send to
  * 
  * chrome.runtime.onInstalled
  * - Runs when extension is installed/updated
@@ -435,6 +506,10 @@ chrome.runtime.onStartup.addListener(() => {
  * chrome.runtime.onStartup
  * - Runs when browser starts
  * - Good for initialization tasks
+ * 
+ * NOTE: We no longer use chrome.notifications for alerts.
+ * Instead, we send messages to content script which displays
+ * a custom in-page modal. This gives us full styling control.
  */
 
 /**
@@ -446,26 +521,31 @@ chrome.runtime.onStartup.addListener(() => {
  *    - No internet connection
  *    - Backend server down
  *    - Timeout
- *    → Show error notification with retry suggestion
+ *    → Send error alert to content script
  * 
  * 2. Authentication Errors (401/403)
  *    - Wrong shared secret
  *    - Missing authentication
- *    → Show error notification about configuration
+ *    → Send error alert about configuration
  * 
  * 3. Rate Limit Errors (429)
  *    - Too many requests
- *    → Show error notification with wait time
+ *    → Send error alert with wait time
  * 
  * 4. Server Errors (500)
  *    - Backend crashed
  *    - OpenAI API down
- *    → Show error notification to try again later
+ *    → Send error alert to try again later
  * 
  * 5. Parsing Errors
  *    - Invalid JSON response
  *    - Unexpected response format
- *    → Show generic error notification
+ *    → Send generic error alert
+ * 
+ * 6. Tab Communication Errors
+ *    - Tab was closed before alert could be sent
+ *    - Content script not loaded
+ *    → Log error, fail gracefully
  * 
  * All errors are logged to console for debugging.
  */
@@ -479,13 +559,16 @@ chrome.runtime.onStartup.addListener(() => {
  *    - Click "Service worker" link under SendSafe
  * 
  * 2. Look for "SendSafe:" log messages
+ *    - "Sending warning alert to tab X" = Alert being sent
+ *    - "Alert message sent successfully" = Content script received it
+ *    - "Failed to send alert" = Tab closed or content script not loaded
  * 
  * 3. Check for errors in red
  * 
  * 4. Test scenarios:
- *    - Paste with AI text (should show warning)
+ *    - Paste with AI text (should show in-page modal)
  *    - Paste with human text (should show nothing)
- *    - Paste with backend down (should show error)
+ *    - Paste with backend down (should show error modal)
  *    - Paste many times quickly (should hit rate limit)
  * 
  * 5. Network tab:
@@ -493,6 +576,11 @@ chrome.runtime.onStartup.addListener(() => {
  *    - Check request headers (auth secret)
  *    - Check response status codes
  *    - Check response bodies
+ * 
+ * 6. Gmail page console (for modal debugging):
+ *    - Open DevTools on Gmail tab
+ *    - Look for "SendSafe:" messages from content script
+ *    - Check if modal HTML is being injected
  */
 
 /**

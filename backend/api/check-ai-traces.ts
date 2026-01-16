@@ -132,6 +132,13 @@ export default async function handler(
   }
   
   try {
+    // -------------------------------------------------------------------------
+    // PERFORMANCE TIMING: Track time for each step
+    // -------------------------------------------------------------------------
+    const timings: Record<string, number> = {};
+    const requestStartTime = Date.now();
+    let stepStartTime = Date.now();
+    
     // -----------------------------------------------------------------------
     // Step 3: Validate shared secret (authentication)
     // -----------------------------------------------------------------------
@@ -157,6 +164,9 @@ export default async function handler(
       } as ErrorResponse);
       return;
     }
+    
+    timings['auth'] = Date.now() - stepStartTime;
+    stepStartTime = Date.now();
     
     // -----------------------------------------------------------------------
     // Step 4: Check rate limiting
@@ -195,6 +205,9 @@ export default async function handler(
       return;
     }
     
+    timings['rateLimit'] = Date.now() - stepStartTime;
+    stepStartTime = Date.now();
+    
     // -----------------------------------------------------------------------
     // Step 5: Parse and validate request body
     // -----------------------------------------------------------------------
@@ -222,12 +235,18 @@ export default async function handler(
       return;
     }
     
+    timings['validation'] = Date.now() - stepStartTime;
+    stepStartTime = Date.now();
+    
     // -----------------------------------------------------------------------
     // Step 6: Sanitize input
     // -----------------------------------------------------------------------
     // Clean up the text before sending to OpenAI
     
     const sanitizeResult = sanitizeInput(body.text);
+    
+    timings['sanitize'] = Date.now() - stepStartTime;
+    stepStartTime = Date.now();
     
     // Log sanitization info (but not the actual text for privacy)
     console.log('Text sanitized:', {
@@ -240,14 +259,18 @@ export default async function handler(
     // -----------------------------------------------------------------------
     // Step 7: Call OpenAI for analysis
     // -----------------------------------------------------------------------
-    console.log('Calling OpenAI for analysis...');
+    console.log('⏱️ [TIMING] Calling OpenAI for analysis...');
     
     const openaiResponse = await detectAIContent(sanitizeResult.sanitizedText);
     
+    timings['openaiCall'] = Date.now() - stepStartTime;
+    stepStartTime = Date.now();
+    
     // Log response info (but not the content)
-    console.log('OpenAI response received:', {
+    console.log('⏱️ [TIMING] OpenAI response received:', {
       finishReason: openaiResponse.finishReason,
       tokensUsed: openaiResponse.tokensUsed,
+      openaiCallMs: timings['openaiCall'],
     });
     
     // Check if response completed successfully
@@ -285,12 +308,15 @@ export default async function handler(
       return;
     }
     
+    timings['parseResponse'] = Date.now() - stepStartTime;
+    
     // -----------------------------------------------------------------------
     // Step 9: Log analytics (no sensitive data)
     // -----------------------------------------------------------------------
     const cost = estimateRequestCost(openaiResponse.tokensUsed);
+    const totalTime = Date.now() - requestStartTime;
     
-    console.log('Request completed:', {
+    console.log('⏱️ [TIMING] Request completed:', {
       aiFlag: detectionResult.aiFlag,
       confidence: detectionResult.confidence,
       categoriesFound: detectionResult.categoriesFound.length,
@@ -299,6 +325,16 @@ export default async function handler(
       estimatedCost: `$${cost.toFixed(6)}`,
       ipAddress: ipAddress,  // For monitoring abuse
       wasTruncated: sanitizeResult.wasTruncated,
+      // Performance timing breakdown
+      timingsMs: {
+        auth: timings['auth'],
+        rateLimit: timings['rateLimit'],
+        validation: timings['validation'],
+        sanitize: timings['sanitize'],
+        openaiCall: timings['openaiCall'],
+        parseResponse: timings['parseResponse'],
+        total: totalTime,
+      },
     });
     
     // -----------------------------------------------------------------------
