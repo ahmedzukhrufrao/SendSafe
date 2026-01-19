@@ -128,6 +128,19 @@ let lastPasteStartTime = 0;
 let currentModal: HTMLElement | null = null;
 
 /**
+ * Reference to the current floating status indicator element (if displayed)
+ *
+ * This appears immediately on paste to provide instant feedback while the
+ * background + backend API work completes.
+ */
+let currentStatusIndicator: HTMLElement | null = null;
+
+/**
+ * Safety timeout for the status indicator (prevents it from sticking forever)
+ */
+let statusSafetyTimeout: number | null = null;
+
+/**
  * Reference to the auto-dismiss timeout
  * 
  * We track this so we can:
@@ -149,7 +162,13 @@ let autoDismissTimeout: number | null = null;
  * 
  * 10000ms = 10 seconds
  */
-const AUTO_DISMISS_MS = 10000;
+const AUTO_DISMISS_MS = config.modal.autoDismissMs;
+
+/**
+ * Maximum time we will keep the status indicator visible without receiving a final outcome.
+ * This should be longer than the backend timeout to account for messaging overhead.
+ */
+const STATUS_SAFETY_TIMEOUT_MS = config.api.timeoutMs + 2000;
 
 // ---------------------------------------------------------------------------
 // Main Initialization
@@ -369,6 +388,10 @@ async function handlePaste(event: ClipboardEvent): Promise<void> {
   // -------------------------------------------------------------------------
   
   console.log(`SendSafe: Sending ${textToCheck.length} characters for analysis`);
+
+  // Show immediate UI feedback so the user knows we're working
+  // This is intentionally shown BEFORE the background/API work starts.
+  showStatusIndicator();
   
   // Create message object
   const message: PasteDetectedMessage = {
@@ -394,9 +417,17 @@ async function handlePaste(event: ClipboardEvent): Promise<void> {
     console.log('SendSafe: Background script response:', response);
     console.log(`SendSafe: ⏱️ [TIMING] Background round-trip took ${roundTripTime.toFixed(0)}ms`);
     console.log(`SendSafe: ⏱️ [TIMING] TOTAL time from paste to response: ${totalTime.toFixed(0)}ms`);
+
+    // Always dismiss the status indicator once the background flow completes.
+    // (Modal display functions will also dismiss it; this is safe and prevents
+    // the indicator from sticking around if an old modal is still open.)
+    dismissStatusIndicator();
   } catch (error) {
     // If sending message fails, log the error
     console.error('SendSafe: Failed to send message to background script:', error);
+
+    // Don't leave the status indicator hanging if messaging fails
+    dismissStatusIndicator();
   }
 }
 
@@ -726,6 +757,90 @@ function injectModalStyles(): void {
     .sendsafe-modal.sendsafe-error .sendsafe-btn:hover {
       background-color: #dc2626;
     }
+
+    /* ---------------------------------------------------------
+       Modal transition when coming FROM status indicator
+       --------------------------------------------------------- */
+    .sendsafe-modal.sendsafe-from-status {
+      transform: translateX(0) scale(0.13);
+      opacity: 1;
+      transform-origin: top right;
+      transition: transform 0.4s ease-out, opacity 0.3s ease-out;
+    }
+
+    .sendsafe-modal.sendsafe-from-status.sendsafe-visible {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+
+    /* =========================================================
+       SendSafe Floating Status Indicator (Immediate Feedback)
+       ========================================================= */
+
+    .sendsafe-status-indicator {
+      /* Keep consistent with modal positioning and theme */
+      width: 48px;
+      height: 48px;
+      border-radius: 12px; /* match modal radius per design spec */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      overflow: hidden;
+
+      /* Override base modal transform so we can scale in smoothly */
+      transform: translateX(120%) scale(0.92);
+      opacity: 0;
+      transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    }
+
+    .sendsafe-status-indicator.sendsafe-visible {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+
+    .sendsafe-status-indicator.sendsafe-fade-out {
+      transform: translateX(120%) scale(0.92);
+      opacity: 0;
+    }
+
+    .sendsafe-status-ring {
+      width: 28px;
+      height: 28px;
+      display: block;
+      animation: sendsafe-rotate 2s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(255, 107, 53, 0.5));
+    }
+
+    .sendsafe-status-ring circle {
+      stroke: #ff6b35;
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-dasharray: 36;
+      stroke-dashoffset: 18;
+    }
+
+    .sendsafe-status-center-icon {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .sendsafe-status-center-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #ff6b35;
+    }
+
+    @keyframes sendsafe-rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   `;
   
   // Add the style element to the document's <head>
@@ -734,6 +849,80 @@ function injectModalStyles(): void {
   document.head.appendChild(styleElement);
   
   console.log('SendSafe: Modal styles injected');
+}
+
+// ---------------------------------------------------------------------------
+// Floating Status Indicator (Immediate Feedback)
+// ---------------------------------------------------------------------------
+
+/**
+ * Shows a small floating status indicator immediately after paste.
+ * This reduces perceived latency by confirming that SendSafe is working.
+ */
+function showStatusIndicator(): void {
+  // Only one indicator at a time
+  dismissStatusIndicator();
+
+  const indicator = document.createElement('div');
+  indicator.className = 'sendsafe-modal sendsafe-status-indicator';
+  indicator.setAttribute('role', 'status');
+  indicator.setAttribute('aria-label', 'SendSafe is analyzing pasted text');
+  indicator.style.position = 'fixed';
+
+  // Center content with a rotating ring + a consistent accent icon
+  indicator.innerHTML = `
+    <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+      <svg class="sendsafe-status-ring" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12"></circle>
+      </svg>
+      <div class="sendsafe-status-center-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/>
+        </svg>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(indicator);
+  currentStatusIndicator = indicator;
+
+  // Animate in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      indicator.classList.add('sendsafe-visible');
+    });
+  });
+
+  // Safety timeout in case we never get a response/message
+  statusSafetyTimeout = window.setTimeout(() => {
+    dismissStatusIndicator();
+  }, STATUS_SAFETY_TIMEOUT_MS);
+}
+
+/**
+ * Dismisses the status indicator with the same fade-out behavior as the modal.
+ */
+function dismissStatusIndicator(): void {
+  if (!currentStatusIndicator) {
+    return;
+  }
+
+  if (statusSafetyTimeout !== null) {
+    clearTimeout(statusSafetyTimeout);
+    statusSafetyTimeout = null;
+  }
+
+  const indicatorToRemove = currentStatusIndicator;
+  currentStatusIndicator = null;
+
+  indicatorToRemove.classList.remove('sendsafe-visible');
+  indicatorToRemove.classList.add('sendsafe-fade-out');
+
+  setTimeout(() => {
+    if (indicatorToRemove.parentNode) {
+      indicatorToRemove.parentNode.removeChild(indicatorToRemove);
+    }
+  }, 350);
 }
 
 // ---------------------------------------------------------------------------
@@ -770,7 +959,8 @@ function showWarningModal(result: APISuccessResponse): void {
   // Create the modal container
   // document.createElement creates a new HTML element
   const modal = document.createElement('div');
-  modal.className = 'sendsafe-modal';
+  const isFromStatusIndicator = !!currentStatusIndicator;
+  modal.className = isFromStatusIndicator ? 'sendsafe-modal sendsafe-from-status' : 'sendsafe-modal';
   
   // Build the inner HTML using template literals
   // Template literals allow us to embed variables with ${variable}
@@ -823,6 +1013,10 @@ function showWarningModal(result: APISuccessResponse): void {
   
   // Store reference so we can remove it later
   currentModal = modal;
+
+  // Now that we're showing the final UI, fade out the status indicator.
+  // Keeping a brief overlap prevents a “dead air” gap.
+  dismissStatusIndicator();
   
   // -------------------------------------------------------------------------
   // Set up event handlers
@@ -936,7 +1130,10 @@ function showErrorModal(errorMessage: string): void {
   
   // Create the modal container with error class
   const modal = document.createElement('div');
-  modal.className = 'sendsafe-modal sendsafe-error';
+  const isFromStatusIndicator = !!currentStatusIndicator;
+  modal.className = isFromStatusIndicator
+    ? 'sendsafe-modal sendsafe-error sendsafe-from-status'
+    : 'sendsafe-modal sendsafe-error';
   
   modal.innerHTML = `
     <!-- Header: Icon, Title, Close Button -->
@@ -969,6 +1166,9 @@ function showErrorModal(errorMessage: string): void {
   // Add modal to the page
   document.body.appendChild(modal);
   currentModal = modal;
+
+  // Fade out the status indicator once the error UI is displayed
+  dismissStatusIndicator();
   
   // Set up event handlers
   const closeBtn = modal.querySelector('.sendsafe-close-btn');
