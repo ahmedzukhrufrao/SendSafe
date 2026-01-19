@@ -57,7 +57,7 @@ interface BackgroundResponse {
  */
 interface ShowAlertMessage {
   type: 'SHOW_ALERT';              // Message type identifier
-  alertType: 'warning' | 'error';  // What kind of alert to show
+  alertType: 'warning' | 'error' | 'success';  // What kind of alert to show
   result?: APISuccessResponse;     // Detection result (for warning alerts)
   errorMessage?: string;           // Error message (for error alerts)
 }
@@ -508,6 +508,9 @@ function setupAlertMessageListener(): void {
         } else if (alertMessage.alertType === 'error' && alertMessage.errorMessage) {
           // Error alert: Something went wrong
           showErrorModal(alertMessage.errorMessage);
+        } else if (alertMessage.alertType === 'success') {
+          // Success alert: No AI detected
+          showSuccessToaster();
         }
         
         // Send acknowledgment back to background script
@@ -826,6 +829,89 @@ function injectModalStyles(): void {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+
+    /* =========================================================
+       SendSafe Success Toaster (No AI Detected)
+       ========================================================= */
+
+    .sendsafe-success-toaster {
+      /* Base positioning - same as status indicator */
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      height: 48px;
+      border-radius: 12px;
+      background-color: #1e1e2e;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 999999;
+      overflow: hidden;
+      
+      /* Start at loader size (48px width) */
+      width: 48px;
+      
+      /* Font settings */
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      font-size: 14px;
+      
+      /* Smooth transitions */
+      transition: width 0.3s ease-out, opacity 0.2s ease-out;
+      opacity: 1;
+    }
+
+    .sendsafe-success-toaster.sendsafe-success-expanded {
+      /* Expand to fit text - approximately 280px */
+      width: 280px;
+    }
+
+    .sendsafe-success-content {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 16px;
+      gap: 12px;
+    }
+
+    .sendsafe-success-icon-container {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sendsafe-success-icon {
+      width: 24px;
+      height: 24px;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+
+    .sendsafe-success-toaster.sendsafe-success-icon-visible .sendsafe-success-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .sendsafe-success-text {
+      color: #f1f1f1;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    }
+
+    .sendsafe-success-toaster.sendsafe-success-text-visible .sendsafe-success-text {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .sendsafe-success-toaster.sendsafe-fade-out {
+      transform: translateX(120%) scale(0.92);
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    }
   `;
   
   // Add the style element to the document's <head>
@@ -881,9 +967,16 @@ function showStatusIndicator(): void {
 
 /**
  * Dismisses the status indicator with the same fade-out behavior as the modal.
+ * Also handles the case where the indicator has been transformed into a success toaster.
  */
 function dismissStatusIndicator(): void {
   if (!currentStatusIndicator) {
+    return;
+  }
+
+  // If it's been transformed into a success toaster, use the toaster dismiss function
+  if (currentStatusIndicator.classList.contains('sendsafe-success-toaster')) {
+    dismissSuccessToaster();
     return;
   }
 
@@ -1176,6 +1269,117 @@ function showErrorModal(errorMessage: string): void {
   autoDismissTimeout = window.setTimeout(() => {
     dismissModal();
   }, AUTO_DISMISS_MS);
+}
+
+// ---------------------------------------------------------------------------
+// Success Toaster Display
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates and displays the success toaster when no AI is detected
+ * 
+ * This function transforms the existing status indicator into a success toaster
+ * with a smooth animation sequence:
+ * 1. Loader icon changes to checkmark icon
+ * 2. Box expands horizontally from right to left
+ * 3. Text fades in
+ */
+function showSuccessToaster(): void {
+  console.log('SendSafe: Showing success toaster');
+  
+  // If no status indicator exists, create one
+  if (!currentStatusIndicator) {
+    // This shouldn't happen, but handle gracefully
+    console.warn('SendSafe: No status indicator found, creating new one');
+    showStatusIndicator();
+    // Wait a frame for it to render
+    requestAnimationFrame(() => {
+      showSuccessToaster();
+    });
+    return;
+  }
+
+  const toaster = currentStatusIndicator;
+  
+  // Clear safety timeout since we're handling the transition
+  if (statusSafetyTimeout !== null) {
+    clearTimeout(statusSafetyTimeout);
+    statusSafetyTimeout = null;
+  }
+
+  // Update classes to transform into success toaster
+  toaster.classList.remove('sendsafe-status-indicator');
+  toaster.classList.add('sendsafe-success-toaster');
+  
+  // Update innerHTML with checkmark icon and text
+  toaster.innerHTML = `
+    <div class="sendsafe-success-content">
+      <div class="sendsafe-success-icon-container">
+        <svg class="sendsafe-success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="#ff6b35"/>
+          <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="sendsafe-success-text">You are safe to hit send.</span>
+    </div>
+  `;
+
+  // Phase 1: Change icon (loader → checkmark) - immediate
+  // The icon is already in the HTML, just need to trigger animation
+  requestAnimationFrame(() => {
+    toaster.classList.add('sendsafe-success-icon-visible');
+    
+      // Phase 2: Expand horizontally after icon change (200ms delay)
+      setTimeout(() => {
+        toaster.classList.add('sendsafe-success-expanded');
+        
+        // Phase 3: Show text after expansion completes (300ms = expansion duration)
+        setTimeout(() => {
+          toaster.classList.add('sendsafe-success-text-visible');
+        }, 300);
+      }, 200);
+  });
+
+  // Set up auto-dismiss after 10 seconds
+  if (autoDismissTimeout !== null) {
+    clearTimeout(autoDismissTimeout);
+  }
+  
+  autoDismissTimeout = window.setTimeout(() => {
+    console.log('SendSafe: Auto-dismissing success toaster after 10 seconds');
+    dismissSuccessToaster();
+  }, AUTO_DISMISS_MS);
+  
+  console.log('SendSafe: Success toaster displayed, will auto-dismiss in 10 seconds');
+}
+
+/**
+ * Dismisses the success toaster with a fade-out animation
+ */
+function dismissSuccessToaster(): void {
+  if (!currentStatusIndicator) {
+    return;
+  }
+
+  // Cancel auto-dismiss timeout if it's still active
+  if (autoDismissTimeout !== null) {
+    clearTimeout(autoDismissTimeout);
+    autoDismissTimeout = null;
+  }
+
+  const toasterToRemove = currentStatusIndicator;
+  currentStatusIndicator = null;
+
+  // Trigger fade-out animation
+  toasterToRemove.classList.remove('sendsafe-success-expanded', 'sendsafe-success-text-visible', 'sendsafe-success-icon-visible');
+  toasterToRemove.classList.add('sendsafe-fade-out');
+
+  // Remove from DOM after animation
+  setTimeout(() => {
+    if (toasterToRemove.parentNode) {
+      toasterToRemove.parentNode.removeChild(toasterToRemove);
+    }
+  }, 350);
 }
 
 // ---------------------------------------------------------------------------

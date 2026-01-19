@@ -56,7 +56,7 @@ interface MessageResponse {
  */
 interface ShowAlertMessage {
   type: 'SHOW_ALERT';           // Message type identifier
-  alertType: 'warning' | 'error'; // What kind of alert to show
+  alertType: 'warning' | 'error' | 'success'; // What kind of alert to show
   result?: APISuccessResponse;   // Detection result (for warning alerts)
   errorMessage?: string;         // Error message (for error alerts)
 }
@@ -206,9 +206,13 @@ async function handlePasteDetection(message: PasteDetectedMessage, tabId: number
       
       console.log(`SendSafe: ⏱️ [TIMING] Sending alert to content script took ${(alertEndTime - alertStartTime).toFixed(0)}ms`);
     } else {
-      // No AI traces - show nothing (per PRD requirement)
-      // We don't want to interrupt users when everything is fine
-      console.log('SendSafe: No AI traces detected, no alert shown');
+      // No AI traces - send success alert to content script
+      // The content script will display the success toaster
+      const alertStartTime = performance.now();
+      await sendAlertToContentScript(tabId, 'success', result);
+      const alertEndTime = performance.now();
+      
+      console.log(`SendSafe: ⏱️ [TIMING] Sending success alert to content script took ${(alertEndTime - alertStartTime).toFixed(0)}ms`);
     }
     
     // Log total time
@@ -228,6 +232,18 @@ async function handlePasteDetection(message: PasteDetectedMessage, tabId: number
     let errorMessage = 'An error occurred while checking the text.';
     if (error instanceof Error) {
       errorMessage = error.message;
+      
+      // Check if this is a network error and provide user-friendly message
+      const isNetworkError = 
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('timeout') ||
+        error.message.includes('Network request failed') ||
+        error.message.toLowerCase().includes('network');
+      
+      if (isNetworkError) {
+        errorMessage = 'Network error. We are unable to read your pasted text. Please try again later.';
+      }
     }
     
     await sendAlertToContentScript(tabId, 'error', undefined, errorMessage);
@@ -375,13 +391,13 @@ async function callBackendAPI(text: string): Promise<APISuccessResponse> {
  * 4. Content script creates and displays the modal
  * 
  * @param tabId - The ID of the tab to send the alert to
- * @param alertType - 'warning' for AI traces detected, 'error' for errors
- * @param result - The detection result (only for warning alerts)
+ * @param alertType - 'warning' for AI traces detected, 'error' for errors, 'success' for no AI detected
+ * @param result - The detection result (only for warning and success alerts)
  * @param errorMessage - The error message (only for error alerts)
  */
 async function sendAlertToContentScript(
   tabId: number,
-  alertType: 'warning' | 'error',
+  alertType: 'warning' | 'error' | 'success',
   result?: APISuccessResponse,
   errorMessage?: string
 ): Promise<void> {
