@@ -821,21 +821,6 @@ function injectModalStyles(): void {
       stroke-dashoffset: 18;
     }
 
-    .sendsafe-status-center-icon {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-
-    .sendsafe-status-center-icon svg {
-      width: 18px;
-      height: 18px;
-      fill: #ff6b35;
-    }
 
     @keyframes sendsafe-rotate {
       from { transform: rotate(0deg); }
@@ -869,17 +854,12 @@ function showStatusIndicator(): void {
   indicator.setAttribute('aria-label', 'SendSafe is analyzing pasted text');
   indicator.style.position = 'fixed';
 
-  // Center content with a rotating ring + a consistent accent icon
+  // Center content with a rotating progress ring
   indicator.innerHTML = `
     <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
       <svg class="sendsafe-status-ring" viewBox="0 0 32 32" aria-hidden="true">
         <circle cx="16" cy="16" r="12"></circle>
       </svg>
-      <div class="sendsafe-status-center-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/>
-        </svg>
-      </div>
     </div>
   `;
 
