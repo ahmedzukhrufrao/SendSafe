@@ -1,0 +1,494 @@
+{
+  "designSystem": {
+    "colors": {
+      "darkCharcoal": "#1e1e2e",
+      "orangeAccent": "#ff6b35",
+      "hoverOrange": "#e55a28",
+      "textPrimary": "#f1f1f1",
+      "textSecondary": "#a0a0a0",
+      "contentBox": "#2d2d44",
+      "successGreen": "#10b981",
+      "errorRed": "#ef4444"
+    },
+    "typography": {
+      "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "heading": {
+        "size": 28,
+        "weight": 600,
+        "lineHeight": 36
+      },
+      "body": {
+        "size": 14,
+        "weight": 400,
+        "lineHeight": 20
+      },
+      "subtext": {
+        "size": 12,
+        "weight": 400,
+        "lineHeight": 16
+      },
+      "badge": {
+        "size": 11,
+        "weight": 500,
+        "lineHeight": 14,
+        "letterSpacing": 0.5
+      }
+    },
+    "spacing": {
+      "padding": 20,
+      "gap": 12,
+      "borderRadius": 8
+    }
+  },
+  "screenshots": [
+    {
+      "id": "screenshot-1",
+      "name": "AI Detection Alert",
+      "dimensions": {
+        "width": 1280,
+        "height": 800
+      },
+      "elements": [
+        {
+          "type": "banner",
+          "name": "Top Banner",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "textColor": "#f1f1f1",
+            "text": "Catch AI-Generated Text Before You Send",
+            "fontSize": 28,
+            "fontWeight": 600,
+            "textAlign": "center",
+            "padding": {
+              "top": 40,
+              "bottom": 20,
+              "left": 40,
+              "right": 40
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Real-time Detection Callout",
+          "position": {
+            "x": 900,
+            "y": 150,
+            "width": 300,
+            "height": 120
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Real-time AI Detection",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Results in under 5 seconds",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 1100,
+              "y": 200
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Artifact Detection Callout",
+          "position": {
+            "x": 600,
+            "y": 400,
+            "width": 280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Identifies Specific Artifacts",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Markdown, repetitive phrasing, unnatural structure",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 700,
+              "y": 500
+            }
+          }
+        },
+        {
+          "type": "badge",
+          "name": "Bottom Badge",
+          "position": {
+            "x": 1000,
+            "y": 720,
+            "width": 260,
+            "height": 40
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "textColor": "#a0a0a0",
+            "text": "Zero Interruption • Works Automatically",
+            "fontSize": 11,
+            "fontWeight": 500,
+            "letterSpacing": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "screenshot-2",
+      "name": "Success State",
+      "dimensions": {
+        "width": 1280,
+        "height": 800
+      },
+      "elements": [
+        {
+          "type": "banner",
+          "name": "Top Banner",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "textColor": "#f1f1f1",
+            "text": "Maintain Your Authentic Voice",
+            "fontSize": 28,
+            "fontWeight": 600,
+            "textAlign": "center",
+            "padding": {
+              "top": 40,
+              "bottom": 20,
+              "left": 40,
+              "right": 40
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Success Feedback Callout",
+          "position": {
+            "x": 900,
+            "y": 150,
+            "width": 300,
+            "height": 120
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#10b981",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Instant Feedback",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Know immediately if your text is safe",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#10b981",
+            "thickness": 3,
+            "target": {
+              "x": 1100,
+              "y": 200
+            }
+          }
+        },
+        {
+          "type": "badge",
+          "name": "Bottom Badge",
+          "position": {
+            "x": 1000,
+            "y": 720,
+            "width": 240,
+            "height": 40
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "textColor": "#a0a0a0",
+            "text": "Non-Intrusive • Auto-Dismisses",
+            "fontSize": 11,
+            "fontWeight": 500,
+            "letterSpacing": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "screenshot-3",
+      "name": "Detailed Detection Results",
+      "dimensions": {
+        "width": 1280,
+        "height": 800
+      },
+      "elements": [
+        {
+          "type": "banner",
+          "name": "Top Banner",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "textColor": "#f1f1f1",
+            "text": "Precise Detection with Detailed Insights",
+            "fontSize": 28,
+            "fontWeight": 600,
+            "textAlign": "center",
+            "padding": {
+              "top": 40,
+              "bottom": 20,
+              "left": 40,
+              "right": 40
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Categories Callout",
+          "position": {
+            "x": 850,
+            "y": 200,
+            "width": 320,
+            "height": 140
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Multiple Detection Categories",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Markdown artifacts, repetitive phrasing, unnatural structure",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 1000,
+              "y": 280
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Snippets Callout",
+          "position": {
+            "x": 850,
+            "y": 380,
+            "width": 300,
+            "height": 120
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Specific Examples",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "See exactly what was detected in your text",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 1000,
+              "y": 450
+            }
+          }
+        },
+        {
+          "type": "badge",
+          "name": "Bottom Badge",
+          "position": {
+            "x": 900,
+            "y": 720,
+            "width": 360,
+            "height": 40
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "textColor": "#a0a0a0",
+            "text": "Review Before Sending • Protect Your Reputation",
+            "fontSize": 11,
+            "fontWeight": 500,
+            "letterSpacing": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "screenshot-4",
+      "name": "Seamless Integration",
+      "dimensions": {
+        "width": 1280,
+        "height": 800
+      },
+      "elements": [
+        {
+          "type": "banner",
+          "name": "Top Banner",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "textColor": "#f1f1f1",
+            "text": "Works Seamlessly in Your Gmail Workflow",
+            "fontSize": 28,
+            "fontWeight": 600,
+            "textAlign": "center",
+            "padding": {
+              "top": 40,
+              "bottom": 20,
+              "left": 40,
+              "right": 40
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "Instant Analysis Callout",
+          "position": {
+            "x": 900,
+            "y": 150,
+            "width": 300,
+            "height": 120
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "Instant Analysis",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Detects paste events automatically",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 1100,
+              "y": 200
+            }
+          }
+        },
+        {
+          "type": "callout",
+          "name": "No Buttons Callout",
+          "position": {
+            "x": 600,
+            "y": 400,
+            "width": 280,
+            "height": 100
+          },
+          "style": {
+            "backgroundColor": "rgba(30, 30, 46, 0.95)",
+            "borderColor": "#ff6b35",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "padding": 16
+          },
+          "content": {
+            "title": "No Buttons to Click",
+            "titleColor": "#f1f1f1",
+            "titleSize": 16,
+            "titleWeight": 600,
+            "subtext": "Just paste and it works",
+            "subtextColor": "#a0a0a0",
+            "subtextSize": 12
+          },
+          "arrow": {
+            "color": "#ff6b35",
+            "thickness": 3,
+            "target": {
+              "x": 700,
+              "y": 500
+            }
+          }
+        },
+        {
+          "type": "badge",
+          "name": "Bottom Badge",
+          "position": {
+            "x": 1000,
+            "y": 720,
+            "width": 300,
+            "height": 40
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "textColor": "#a0a0a0",
+            "text": "Zero Configuration • Works Immediately",
+            "fontSize": 11,
+            "fontWeight": 500,
+            "letterSpacing": 0.5
+          }
+        }
+      ]
+    }
+  ]
+}
+
+
+

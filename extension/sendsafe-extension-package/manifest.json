@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "SendSafe – Detect AI Traces Before You Send Emails",
+  "name": "SendSafe",
   "version": "1.0.0",
-  "description": "Get warned in real time when pasted email text includes AI traces, helping you avoid embarrassing mistakes.",
+  "description": "Detects AI-generated copy-paste artifacts in Gmail before you send",
   
   "icons": {
     "16": "assets/icons/icon-16.png",

@@ -1,0 +1,88 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer shield layer -->
+  <path 
+    d="M 64 10.24 L 108.8 32 L 108.8 70.4 Q 108.8 99.84 64 117.76 Q 19.2 99.84 19.2 70.4 L 19.2 32 Z" 
+    fill="none" 
+    stroke="url(#shieldGradient)" 
+    stroke-width="3.2"
+    opacity="0.4"
+  />
+  
+  <!-- Middle shield layer -->
+  <path 
+    d="M 64 16.64 L 102.4 35.84 L 102.4 70.4 Q 102.4 96 64 112.64 Q 25.6 96 25.6 70.4 L 25.6 35.84 Z" 
+    fill="none" 
+    stroke="url(#shieldGradient)" 
+    stroke-width="3.2"
+    opacity="0.7"
+  />
+  
+  <!-- Inner shield layer -->
+  <path 
+    d="M 64 23.04 L 96 39.68 L 96 70.4 Q 96 92.16 64 107.52 Q 32 92.16 32 70.4 L 32 39.68 Z" 
+    fill="none" 
+    stroke="url(#shieldGradient)" 
+    stroke-width="3.84"
+  />
+  
+  <!-- Sophisticated scan lines - staggered -->
+  <line 
+    x1="35.84" 
+    y1="48.64" 
+    x2="70.4" 
+    y2="48.64" 
+    stroke="#3b82f6" 
+    stroke-width="2.56" 
+    opacity="0.9" 
+    stroke-linecap="round"
+  />
+  
+  <line 
+    x1="44.8" 
+    y1="61.44" 
+    x2="92.16" 
+    y2="61.44" 
+    stroke="#3b82f6" 
+    stroke-width="2.56" 
+    opacity="0.7" 
+    stroke-linecap="round"
+  />
+  
+  <line 
+    x1="35.84" 
+    y1="74.24" 
+    x2="83.2" 
+    y2="74.24" 
+    stroke="#3b82f6" 
+    stroke-width="2.56" 
+    opacity="0.9" 
+    stroke-linecap="round"
+  />
+  
+  <line 
+    x1="40.96" 
+    y1="87.04" 
+    x2="74.24" 
+    y2="87.04" 
+    stroke="#3b82f6" 
+    stroke-width="2.56" 
+    opacity="0.6" 
+    stroke-linecap="round"
+  />
+  
+  <!-- Corner accent dot -->
+  <circle 
+    cx="64" 
+    cy="23.04" 
+    r="2.56" 
+    fill="#3b82f6"
+  />
+</svg>

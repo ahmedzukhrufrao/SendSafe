@@ -139,8 +139,9 @@ export const config: Config = {
     // The || operator means "use this if the left side is empty"
     model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
     
-    // Timeout defaults to 10 seconds (10000 milliseconds)
-    timeout: getEnvVarAsNumber('OPENAI_TIMEOUT', 10000),
+    // Timeout defaults to 30 seconds (30000 milliseconds)
+    // OpenAI API calls can take longer under load or with complex requests
+    timeout: getEnvVarAsNumber('OPENAI_TIMEOUT', 30000),
   },
   
   // Security configuration

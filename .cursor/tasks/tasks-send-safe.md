@@ -1,0 +1,149 @@
+## Relevant Files
+
+- `README.md` - Simple “how to run” instructions for both the backend and the Chrome extension.
+- `docs/privacy-policy.md` - Privacy policy text required for Chrome Web Store listing (explains what data is sent and why).
+- `backend/api/check-ai-traces.ts` - The Vercel backend endpoint the extension calls to check pasted text.
+- `backend/lib/config.ts` - Central place for backend settings (env vars like OpenAI key, shared secret, rate limit).
+- `backend/lib/openaiClient.ts` - Calls OpenAI using the server-only API key.
+- `backend/lib/parseDetectionResult.ts` - Converts OpenAI’s response into a stable JSON response for the extension.
+- `backend/lib/rateLimit.ts` - Rate limiting logic (e.g., 10 checks/hour per IP).
+- `backend/lib/sanitizeInput.ts` - Truncation + removal of control characters before sending text to OpenAI.
+- `backend/api/check-ai-traces.test.ts` - Tests for the backend endpoint behavior (happy path + errors).
+- `backend/lib/parseDetectionResult.test.ts` - Tests for parsing OpenAI responses into JSON.
+- `extension/manifest.json` - Chrome extension permissions, content script registration, and service worker setup.
+- `extension/src/contentScript.ts` - Runs in Gmail; detects paste events and captures pasted text.
+- `extension/src/background.ts` - Receives messages from content script; calls backend; triggers notifications.
+- `extension/src/config.ts` - Extension-side config (backend URL, timeouts, max length, shared secret header/value for MVP).
+- `extension/assets/icons/icon-16.png` - Toolbar icon.
+- `extension/assets/icons/icon-48.png` - Extension management icon.
+- `extension/assets/icons/icon-128.png` - Store listing + notification icon.
+- `extension/README.md` - How to load the extension in Chrome for local testing.
+
+### Notes
+
+- This checklist is written in simple language so non-technical stakeholders can follow along, but it’s still meant to guide the developer building the feature.
+- When a task is done, change `- [ ]` to `- [x]` so progress is visible.
+- Unit tests should typically be placed alongside the code they test (same folder).
+- If using Jest, you can run tests with `npx jest` (or `npx jest path/to/test` for a specific test).
+
+## Instructions for Completing Tasks
+
+**IMPORTANT:** As you complete each task, you must check it off in this markdown file by changing `- [ ]` to `- [x]`.
+
+## Tasks
+
+- [ ] 0.0 Create feature branch
+  - **Explanation:** Make a separate “work lane” in Git so changes for SendSafe don’t accidentally mix with other work.
+  - [x] 0.1 Create and switch to a new branch for this feature (example: `feature/send-safe`)
+    - **Explanation:** This is like making a safe copy of the project where we can make changes without affecting the main version.
+- [x] 1.0 Decide the "shape" of the project (folders + basic setup)
+  - **Explanation:** Create the basic folder layout for the Chrome extension and the backend so everything is organized and easy to find.
+  - [x] 1.1 Create top-level folders for `backend/` and `extension/`
+    - **Explanation:** Make two clear places: one for the server part ("backend") and one for the Chrome extension part.
+  - [x] 1.2 Decide the backend format for Vercel (simple serverless function) and add any required config files
+    - **Explanation:** Choose how the server will run on Vercel (their hosting platform) and add the basic setup files Vercel expects.
+  - [x] 1.3 Create a simple config plan: what is stored in environment variables (server) vs what is stored in the extension (client)
+    - **Explanation:** Decide what must stay secret on the server (like the OpenAI key) versus what can safely live in the extension.
+  - [x] 1.4 Write a short `README.md` describing what SendSafe does (in plain English)
+    - **Explanation:** Write a simple overview so anyone can understand what the product is and how it works at a high level.
+- [x] 2.0 Build the backend "checker" API (Vercel) that talks to OpenAI securely
+  - **Explanation:** Create a server endpoint that receives pasted text, calls OpenAI using a secret key stored on the server, and returns a simple yes/no + details.
+  - [x] 2.1 Create the API endpoint `POST /api/check-ai-traces`
+    - **Explanation:** Create the single "doorway" the extension will use to send text for checking.
+  - [x] 2.2 Validate the incoming request (must include a `text` field; reject empty/whitespace-only input)
+    - **Explanation:** Make sure we only process real text (not blank messages), so we don't waste time or money.
+  - [x] 2.3 Clean up the text before analysis (remove control characters, keep line breaks, truncate to 5000 characters)
+    - **Explanation:** Remove weird hidden characters and limit the amount of text so the system stays fast and affordable.
+  - [x] 2.4 Store the "detection instructions" prompt on the backend (not in the extension)
+    - **Explanation:** Keep the "how to detect AI traces" instructions on the server so they aren't exposed to users.
+  - [x] 2.5 Call OpenAI with the prompt + user text and a safe timeout (10 seconds)
+    - **Explanation:** Send the text to OpenAI for analysis, but stop waiting if it takes too long so the user isn't stuck.
+  - [x] 2.6 Parse OpenAI's response into stable JSON: `aiFlag`, `categoriesFound`, `indicators[]`
+    - **Explanation:** Convert OpenAI's answer into a consistent, computer-friendly format the extension can reliably use.
+  - [x] 2.7 Return only the structured JSON to the extension (never return raw secrets or raw OpenAI credentials)
+    - **Explanation:** Send back only the results, and never leak private keys or sensitive internal information.
+- [x] 3.0 Add protection on the backend (shared secret + rate limiting + safe error messages)
+  - **Explanation:** Prevent abuse and control costs by requiring a shared secret from the extension and limiting how often the API can be used.
+  - [x] 3.1 Require `X-SendSafe-Secret` header to match `SENDSAFE_SHARED_SECRET` (stored on Vercel)
+    - **Explanation:** Add a "password-like" check so only the official extension can use the backend.
+  - [x] 3.2 Add rate limiting: maximum 10 checks per hour per IP address (fixed 60-minute window)
+    - **Explanation:** Prevent someone from spamming requests and running up costs by limiting how often the service can be used.
+  - [x] 3.3 Return clear error codes/messages (401/403, 429, 500) without exposing internal details
+    - **Explanation:** If something goes wrong, return a clear "what happened" result without revealing private system details.
+  - [x] 3.4 Confirm logs do not include secrets or pasted email content
+    - **Explanation:** Ensure we are not accidentally saving private email text or secret keys in server logs.
+- [x] 4.0 Build the Chrome extension that detects paste in Gmail and asks the backend to check
+  - **Explanation:** Watch for paste actions in Gmail's email editor, extract plain text, and send it to the backend for analysis.
+  - [x] 4.1 Create `manifest.json` (Manifest V3) with minimal permissions (notifications + Gmail-only host permissions)
+    - **Explanation:** Set up the extension's "permission slip" so it only asks for what it truly needs (like showing notifications).
+  - [x] 4.2 Add a content script that runs only on Gmail (`https://mail.google.com/*`)
+    - **Explanation:** Make sure the extension only activates inside Gmail, not on other websites.
+  - [x] 4.3 Find Gmail's email body editor reliably (use more than one selector + handle Gmail UI changes)
+    - **Explanation:** Gmail's layout changes often, so we need a reliable way to find where the user is typing the email.
+  - [x] 4.4 Use a watcher (MutationObserver) so it also works for reply/forward/pop-out compose windows
+    - **Explanation:** Gmail creates and removes compose boxes dynamically, so we "watch" the page and hook into new compose windows as they appear.
+  - [x] 4.5 Listen for paste events and capture pasted content as plain text (not HTML)
+    - **Explanation:** Detect when the user pastes text and capture what they pasted in a clean text-only form.
+  - [x] 4.6 Skip checks for empty paste; truncate long paste to 5000 characters
+    - **Explanation:** Avoid pointless checks and keep requests small enough to be fast and predictable.
+  - [x] 4.7 Send the pasted text to the background script/service worker
+    - **Explanation:** Pass the text to the extension's "control center" that handles calling the backend.
+  - [x] 4.8 From the background script, call the backend endpoint with the shared secret header (MVP approach)
+    - **Explanation:** Ask the server to check the text, including the shared secret so the server knows it's the official extension.
+  - [x] 4.9 Handle rapid repeated pastes safely (don't stack multiple checks in a way that causes spam)
+    - **Explanation:** If a user pastes many times quickly, keep things stable and avoid flooding the backend with requests.
+- [x] 5.0 Show clear user alerts (Chrome notifications) for warnings and errors
+  - **Explanation:** If AI traces are found (or there's a problem like rate limit/network), show a short notification that tells the user what happened.
+  - [x] 5.1 If the backend returns `aiFlag: true`, show a warning notification summarizing categories found
+    - **Explanation:** When issues are found, show a short "heads up" with the types of problems detected.
+  - [x] 5.2 If `aiFlag: false`, show nothing (MVP requirement)
+    - **Explanation:** If everything looks clean, don't interrupt the user with extra messages.
+  - [x] 5.3 If backend returns an error, show a user-friendly error notification (rate limit, network issue, service unavailable)
+    - **Explanation:** If something fails, show a simple message that helps the user understand what to do next.
+  - [x] 5.4 Ensure notifications do not block Gmail or prevent sending email
+    - **Explanation:** The extension must only warn; it should never stop the user from writing or sending emails.
+- [x] 6.0 Add basic testing + a simple "how to run" guide so others can verify it works
+  - **Explanation:** Provide a repeatable way to install/run the extension and backend locally and a checklist to confirm the main scenarios work.
+  - [x] 6.1 Add a "how to run locally" section for the backend (including environment variables)
+    - **Explanation:** Write simple steps so someone can start the backend on their computer with the right settings.
+  - [x] 6.2 Add a "how to install in Chrome" section (load unpacked extension)
+    - **Explanation:** Write simple steps so someone can install the extension in Chrome for testing without publishing it.
+  - [x] 6.3 Create a manual test checklist based on the PRD (paste AI examples, paste human examples, rate limit, network down)
+    - **Explanation:** Make a step-by-step list of real scenarios to try, to confirm the product works end-to-end.
+  - [x] 6.4 Add a few automated tests for backend parsing + key error cases (401/403, 429, invalid input)
+    - **Explanation:** Add repeatable "self-checks" so the backend can be verified quickly after changes.
+- [x] 7.0 Deploy backend to Vercel and set up environment variables
+  - **Explanation:** Make the backend available on the internet and configure secrets safely so the extension can use it.
+  - [x] 7.1 Create a Vercel project for the backend and connect it to this repo (or deploy the backend folder)
+    - **Explanation:** Set up the hosting project so Vercel can build and run the backend automatically.
+    - **Completed:** Project deployed at `send-safe.vercel.app` with root directory set to `backend/`
+  - [x] 7.2 Add required environment variables in Vercel (OpenAI key, shared secret, model, timeouts, rate limit)
+    - **Explanation:** Add the secret keys and settings in Vercel's secure settings area (not inside the code).
+    - **Completed:** Added `OPENAI_API_KEY` and `SENDSAFE_SHARED_SECRET` in Vercel dashboard
+  - [x] 7.3 Deploy and record the production backend URL
+    - **Explanation:** Publish the backend and save the web address the extension must call.
+    - **Completed:** Production URL: `https://send-safe.vercel.app/api/check-ai-traces`
+  - [x] 7.4 Update the extension config with the production backend URL (and confirm requests go to the backend, not OpenAI directly)
+    - **Explanation:** Point the extension at the real server and confirm the extension never talks to OpenAI directly.
+    - **Completed:** Updated `extension/src/config.ts` with production URL
+  - [x] 7.5 Run a quick real-world test: paste in Gmail and confirm you get a result in under 10 seconds
+    - **Explanation:** Do a final reality check that the whole system works in a real Gmail tab for a normal user.
+    - **Completed:** Tested on January 16, 2026 - AI traces detected and notification shown successfully
+- [ ] 8.0 Create Chrome Web Store submission package (privacy policy, icons, screenshots, description)
+  - **Explanation:** Prepare the materials required to publish the extension so users can install it safely and understand what it does.
+  - [x] 8.1 Create the required icon files (16x16, 48x48, 128x128)
+    - **Explanation:** Make the images Chrome needs to display the extension in the toolbar and in the store listing.
+    - [x] 8.1.1 Create the `extension/assets/icons/` directory
+    - [x] 8.1.2 Add three PNG icon files: `icon-16.png`, `icon-48.png`, and `icon-128.png` in the assets/icons folder
+    - [x] 8.1.3 Restore the icons section in `manifest.json` (currently removed to allow local testing without icons)
+  - [x] 8.2 Write the privacy policy in plain English (what data is sent, what is not stored, how to disable)
+    - **Explanation:** Clearly explain what information is processed and reassure users about privacy and control.
+  - [ ] 8.3 Create 2–5 screenshots showing how it works in Gmail and what the notification looks like
+    - **Explanation:** Provide pictures so users immediately understand what to expect after installing.
+  - [x] 8.4 Write the store listing description (short + long) and permission justification
+    - **Explanation:** Write the text that appears in the Chrome Web Store, including why the extension needs each permission.
+    - **Completed:** Created `CHROME_STORE_LISTING.md` with short description (131 chars), detailed description, and permission justification
+  - [x] 8.5 Package the extension for upload (zip) and do a final permissions review
+    - **Explanation:** Create the final upload file and double-check the extension only requests minimal permissions.
+    - **Completed:** Created `extension/sendsafe-extension.zip` (19.57 KB) containing only required files (manifest.json, dist/, assets/icons/). Verified permissions are minimal: only `host_permissions` for Gmail, no broad permissions.
+

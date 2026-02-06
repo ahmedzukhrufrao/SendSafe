@@ -418,15 +418,14 @@ async function handlePaste(event: ClipboardEvent): Promise<void> {
     console.log(`SendSafe: ⏱️ [TIMING] Background round-trip took ${roundTripTime.toFixed(0)}ms`);
     console.log(`SendSafe: ⏱️ [TIMING] TOTAL time from paste to response: ${totalTime.toFixed(0)}ms`);
 
-    // Always dismiss the status indicator once the background flow completes.
-    // (Modal display functions will also dismiss it; this is safe and prevents
-    // the indicator from sticking around if an old modal is still open.)
-    dismissStatusIndicator();
+    // Don't dismiss the status indicator here - the SHOW_ALERT message handlers
+    // (showWarningModal, showErrorModal, showSuccessToaster) will handle it.
+    // The background script sends SHOW_ALERT asynchronously after this response.
   } catch (error) {
     // If sending message fails, log the error
     console.error('SendSafe: Failed to send message to background script:', error);
 
-    // Don't leave the status indicator hanging if messaging fails
+    // Dismiss the status indicator if messaging fails (no SHOW_ALERT will be sent)
     dismissStatusIndicator();
   }
 }
@@ -510,6 +509,7 @@ function setupAlertMessageListener(): void {
           showErrorModal(alertMessage.errorMessage);
         } else if (alertMessage.alertType === 'success') {
           // Success alert: No AI detected
+          console.log('SendSafe: Received success alert, showing toaster');
           showSuccessToaster();
         }
         
@@ -867,13 +867,13 @@ function injectModalStyles(): void {
       display: flex;
       align-items: center;
       height: 100%;
-      padding: 0 16px;
+      padding: 0 10px;
       gap: 12px;
     }
 
     .sendsafe-success-icon-container {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -881,8 +881,8 @@ function injectModalStyles(): void {
     }
 
     .sendsafe-success-icon {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       opacity: 0;
       transform: scale(0.8);
       transition: opacity 0.2s ease-out, transform 0.2s ease-out;
@@ -1308,16 +1308,21 @@ function showSuccessToaster(): void {
   }
 
   // Update classes to transform into success toaster
+  // Remove status indicator class but keep sendsafe-visible if present
+  // The sendsafe-success-toaster class has opacity: 1 by default, so it will be visible
   toaster.classList.remove('sendsafe-status-indicator');
   toaster.classList.add('sendsafe-success-toaster');
+  
+  // Ensure the element is visible (remove any fade-out classes that might be present)
+  toaster.classList.remove('sendsafe-fade-out');
   
   // Update innerHTML with checkmark icon and text
   toaster.innerHTML = `
     <div class="sendsafe-success-content">
       <div class="sendsafe-success-icon-container">
-        <svg class="sendsafe-success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" fill="#ff6b35"/>
-          <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg class="sendsafe-success-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="14" cy="14" r="12" fill="#ff6b35"/>
+          <path d="M10 14l3 3 6-6" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <span class="sendsafe-success-text">You are safe to hit send.</span>

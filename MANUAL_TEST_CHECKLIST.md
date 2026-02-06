@@ -2,6 +2,8 @@
 
 This document provides a comprehensive checklist for manually testing SendSafe to ensure all functionality works as expected. Use this checklist before deploying updates or submitting to the Chrome Web Store.
 
+**NOTE:** As of January 2026, SendSafe displays alerts as **in-page modals** (dark-themed popups in the top-right corner of Gmail) instead of Chrome system notifications. The modals auto-dismiss after 10 seconds.
+
 ## Test Environment Setup
 
 ### Prerequisites
@@ -44,10 +46,12 @@ This document provides a comprehensive checklist for manually testing SendSafe t
 4. Paste the text into the email body (Ctrl+V or Cmd+V)
 
 **Expected Result:**
-- [ ] Notification appears within 3-5 seconds
-- [ ] Notification title: "⚠️ AI Traces Detected in Pasted Content"
-- [ ] Notification lists detected categories (e.g., "Introductory Remnant", "Bracketed Placeholder", "Markdown Artifact", "Assistant Outro")
-- [ ] Notification can be dismissed
+- [ ] Dark-themed modal appears in top-right corner within 3-5 seconds
+- [ ] Modal has title: "AI Traces Detected" with warning icon (orange triangle)
+- [ ] Modal shows count of traces and lists detected categories
+- [ ] Modal shows specific snippets of detected text (in orange)
+- [ ] Modal can be dismissed via X button OR "Got it" button
+- [ ] Modal auto-dismisses after 10 seconds if not manually closed
 - [ ] Email body still contains the pasted text (not modified)
 - [ ] You can continue editing the email normally
 
@@ -71,7 +75,7 @@ Best regards,
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears in top-right corner
 - [ ] Categories found include "Bracketed Placeholder"
 - [ ] Multiple placeholders detected ([Your Name], {Company Name}, <Date>, [Sender Name])
 
@@ -94,7 +98,7 @@ Thanks!
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears in top-right corner
 - [ ] Categories found include "Introductory Remnant"
 - [ ] Snippet shows "Sure, here's the draft email you requested:"
 
@@ -121,7 +125,7 @@ Thanks!
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears in top-right corner
 - [ ] Categories found include "Markdown Artifact"
 - [ ] Detects **, ###, ``, or similar markdown syntax
 
@@ -144,7 +148,7 @@ Best regards
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears in top-right corner
 - [ ] Categories found include "Self-Referential" or "Identity Statement"
 - [ ] Detects "As an AI language model" and "I don't have access to"
 
@@ -168,7 +172,7 @@ Let me know if you'd like me to adjust the tone or add more details!
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears in top-right corner
 - [ ] Categories found include "Assistant Outro" or "Conclusion Text"
 - [ ] Detects "Let me know if you'd like me to adjust..."
 
@@ -194,7 +198,7 @@ Michael
 ```
 
 **Expected Result:**
-- [ ] NO notification appears
+- [ ] NO modal appears (clean text should not trigger alert)
 - [ ] No console errors
 - [ ] Email can be edited and sent normally
 
@@ -213,7 +217,7 @@ Michael
 3. Paste AI-generated text with traces (use test from 1.1)
 
 **Expected Result:**
-- [ ] Notification appears with detected traces
+- [ ] Modal appears in top-right corner with detected traces
 
 **Pass/Fail:** _____
 
@@ -229,7 +233,7 @@ Michael
 4. Paste AI-generated text with traces
 
 **Expected Result:**
-- [ ] Notification appears with detected traces
+- [ ] Modal appears in top-right corner with detected traces
 
 **Pass/Fail:** _____
 
@@ -244,7 +248,7 @@ Michael
 3. Paste AI-generated text with traces
 
 **Expected Result:**
-- [ ] Notification appears with detected traces
+- [ ] Modal appears in top-right corner with detected traces
 - [ ] Works in the separate window
 
 **Pass/Fail:** _____
@@ -256,13 +260,13 @@ Michael
 
 **Steps:**
 1. Open 3 compose windows simultaneously (main Gmail window)
-2. Paste AI-generated text in first window - verify notification
-3. Paste different AI text in second window - verify notification
-4. Paste clean text in third window - verify no notification
+2. Paste AI-generated text in first window - verify modal appears
+3. Paste different AI text in second window - verify modal appears
+4. Paste clean text in third window - verify no modal appears
 
 **Expected Result:**
 - [ ] Each compose window is monitored independently
-- [ ] Correct notifications for each paste event
+- [ ] Correct modal alerts for each paste event
 - [ ] No interference between windows
 
 **Pass/Fail:** _____
@@ -281,7 +285,7 @@ Michael
 4. Check browser DevTools Network tab
 
 **Expected Result:**
-- [ ] No notification appears
+- [ ] No modal appears
 - [ ] No API call made to backend (check Network tab)
 - [ ] No errors in console
 
@@ -299,7 +303,7 @@ Michael
 4. Paste into email body
 
 **Expected Result:**
-- [ ] Notification appears (if traces in first 5000 chars)
+- [ ] Modal appears (if traces in first 5000 chars)
 - [ ] Request payload is truncated to 5000 characters (check Network tab)
 - [ ] No errors or timeouts
 
@@ -324,7 +328,7 @@ Emojis: 😀 🎉 ✅ ⚠️
 ```
 
 **Expected Result:**
-- [ ] Notification appears
+- [ ] Modal appears
 - [ ] Special characters and Unicode don't break parsing
 - [ ] Detects traces despite special characters
 
@@ -360,8 +364,8 @@ Emojis: 😀 🎉 ✅ ⚠️
 3. Paste AI-generated text with traces
 
 **Expected Result:**
-- [ ] Error notification appears after timeout (~10 seconds)
-- [ ] Error message: "Network error. Please check your connection and try again." or similar
+- [ ] Error modal appears in top-right corner after timeout (~10 seconds)
+- [ ] Error message: "Network error. We are unable to read your pasted text. Please try again later."
 - [ ] No console errors crash the extension
 - [ ] Gmail functionality unaffected
 - [ ] Can still edit and send email
@@ -380,7 +384,7 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 **Expected Result:**
 - [ ] Request times out after configured timeout (10 seconds)
-- [ ] Error notification appears: "Detection timed out..." or "Network error..."
+- [ ] Error modal appears: "Detection timed out..." or "Network error..."
 - [ ] No hanging state
 
 **Pass/Fail:** _____
@@ -398,14 +402,14 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 **Expected Result:**
 - [ ] Paste event detected
-- [ ] Notification appears with detected traces
+- [ ] Modal appears in top-right corner with detected traces
 
 **Pass/Fail:** _____
 
 ---
 
 ### Test 3.8: Short Paste (Too Short to Analyze)
-**Objective:** Verify very short pastes are ignored (no API call, no notification)
+**Objective:** Verify very short pastes are ignored (no API call, no modal)
 
 **Steps:**
 1. Compose a new email
@@ -417,7 +421,7 @@ Emojis: 😀 🎉 ✅ ⚠️
 4. Check DevTools Console for SendSafe logs
 
 **Expected Result:**
-- [ ] No notification appears
+- [ ] No modal appears
 - [ ] No backend request is made for the short paste (best-effort; verify via Service Worker logs if possible)
 - [ ] No errors in console
 
@@ -456,10 +460,10 @@ Emojis: 😀 🎉 ✅ ⚠️
    - Subject field
    - To field (recipient)
    - Cc/Bcc field (if available)
-3. Observe notifications and console logs
+3. Observe modals and console logs
 
 **Expected Result:**
-- [ ] No notification appears for pastes in Subject/To/Cc/Bcc
+- [ ] No modal appears for pastes in Subject/To/Cc/Bcc
 - [ ] No backend API requests occur from these fields (best-effort; verify via Service Worker logs if possible)
 - [ ] Gmail continues to work normally
 
@@ -478,8 +482,8 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 **Expected Result:**
 - [ ] Paste is detected and analyzed
-- [ ] Notification appears (for AI-trace content)
-- [ ] No missing-message or “service worker not available” type errors
+- [ ] Modal appears (for AI-trace content)
+- [ ] No missing-message or "service worker not available" type errors
 
 **Pass/Fail:** _____
 
@@ -495,8 +499,8 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 **Expected Result:**
 - [ ] Both tabs trigger detection when pasting in the email body
-- [ ] Notifications appear for both pastes (when traces are detected)
-- [ ] No duplicate listeners causing multiple notifications for a single paste
+- [ ] Modals appear for both pastes (when traces are detected)
+- [ ] No duplicate listeners causing multiple modals for a single paste
 
 **Pass/Fail:** _____
 
@@ -513,9 +517,9 @@ Emojis: 😀 🎉 ✅ ⚠️
 3. Wait for responses
 
 **Expected Result:**
-- [ ] First 10 pastes (or configured limit) succeed with normal notifications
+- [ ] First 10 pastes (or configured limit) succeed with normal modals
 - [ ] 11th paste returns rate limit error
-- [ ] Rate limit notification appears: "Rate limit reached. Please wait..."
+- [ ] Rate limit error modal appears: "Rate limit reached. Please wait..."
 - [ ] HTTP 429 status in Network tab
 
 **Pass/Fail:** _____
@@ -533,7 +537,7 @@ Emojis: 😀 🎉 ✅ ⚠️
 **Expected Result:**
 - [ ] After time window, rate limit resets
 - [ ] New paste succeeds with normal detection
-- [ ] Notification appears normally
+- [ ] Modal appears normally
 
 **Pass/Fail:** _____
 
@@ -625,12 +629,12 @@ Emojis: 😀 🎉 ✅ ⚠️
 1. Compose new email
 2. Paste AI-generated text
 3. Use browser DevTools > Network tab to measure time
-4. Note time from paste to notification
+4. Note time from paste to modal appearing
 
 **Expected Result:**
 - [ ] Typical detection time: 2-5 seconds
 - [ ] Maximum time: 10 seconds (then timeout)
-- [ ] User sees notification quickly
+- [ ] User sees modal quickly
 
 **Acceptable:** ≤ 5 seconds typical, ≤ 10 seconds maximum
 
@@ -711,7 +715,7 @@ Emojis: 😀 🎉 ✅ ⚠️
 **Expected Result:**
 - [ ] `manifest_version` is 3
 - [ ] `background.service_worker` specified (not `background.page`)
-- [ ] Minimal permissions requested (notifications, Gmail host only)
+- [ ] Minimal permissions requested (Gmail host only - no longer needs notifications permission)
 
 **Pass/Fail:** _____
 
@@ -743,17 +747,19 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 ## Category 8: User Experience
 
-### Test 8.1: Notification Visibility
-**Objective:** Verify notifications are clear and visible
+### Test 8.1: Modal Visibility and Appearance
+**Objective:** Verify modal alerts are clear and visible
 
 **Steps:**
 1. Paste AI-generated text with multiple trace categories
-2. Observe notification appearance
+2. Observe modal appearance
 
 **Expected Result:**
-- [ ] Notification is clearly visible
-- [ ] Title is attention-grabbing
+- [ ] Modal appears in top-right corner of Gmail
+- [ ] Dark theme with orange accent (warning icon and button)
+- [ ] Title "AI Traces Detected" is clearly visible
 - [ ] Message is concise and informative
+- [ ] Detected items are listed with snippets
 - [ ] Lists detected categories clearly
 - [ ] Can be dismissed easily
 
@@ -767,12 +773,12 @@ Emojis: 😀 🎉 ✅ ⚠️
 **Steps:**
 1. Compose email
 2. Paste AI-generated text
-3. While notification is visible, click "Send" button
+3. While modal is visible, click "Send" button
 
 **Expected Result:**
 - [ ] Email sends successfully
 - [ ] Extension does not block or intercept send
-- [ ] Notification is informational only, not blocking
+- [ ] Modal is informational only, not blocking
 
 **Pass/Fail:** _____
 
@@ -796,18 +802,23 @@ Emojis: 😀 🎉 ✅ ⚠️
 
 ---
 
-### Test 8.4: Notification Content + Dismiss Behavior
-**Objective:** Verify notification content is understandable and behaves as expected
+### Test 8.4: Modal Content + Dismiss Behavior
+**Objective:** Verify modal content is understandable and all dismiss methods work
 
 **Steps:**
 1. Paste AI-generated text with traces (use Test 1.1)
-2. Observe the warning notification
-3. Dismiss the notification (click the X or dismiss action in your OS notification center)
+2. Observe the warning modal
+3. Test dismiss via X button (close icon in header)
+4. Paste again, test dismiss via "Got it" button
+5. Paste again, wait 10 seconds for auto-dismiss
 
 **Expected Result:**
-- [ ] Notification title clearly indicates a SendSafe warning
-- [ ] Message includes confidence and category summary (where available)
-- [ ] Notification can be dismissed
+- [ ] Modal title shows "AI Traces Detected" with warning icon
+- [ ] Message shows count of traces and categories found
+- [ ] Detected items are listed with snippets in orange
+- [ ] X button in top-right dismisses modal with fade-out animation
+- [ ] "Got it" button dismisses modal with fade-out animation
+- [ ] Modal auto-dismisses after 10 seconds if not manually closed
 - [ ] Gmail remains usable throughout
 
 **Pass/Fail:** _____

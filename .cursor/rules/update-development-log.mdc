@@ -1,0 +1,161 @@
+# Rule: Maintaining the Development Log
+
+## Goal
+
+To ensure the `DEVELOPMENT_LOG.md` file remains accurate and up-to-date throughout the project lifecycle, serving as a comprehensive learning resource and historical record.
+
+## What is the DEVELOPMENT_LOG.md?
+
+The Development Log is a detailed, educational document that:
+- Explains every step taken during development
+- Breaks down technical concepts for non-technical readers
+- Documents all code changes, bug fixes, and decisions
+- Serves as a learning resource for someone with no coding experience
+- Maintains a historical record of the project's evolution
+
+## When to Update the Development Log
+
+### ALWAYS Update After:
+
+1. **Completing any task from the task list**
+   - Document what was done
+   - Explain the code and concepts
+   - Add relevant file paths and line numbers
+
+2. **Making code changes**
+   - Bug fixes
+   - Feature additions
+   - Refactoring
+   - Configuration changes
+   - Dependency updates
+
+3. **Discovering and fixing errors**
+   - Document the error
+   - Explain why it occurred
+   - Detail the solution
+   - Include lessons learned
+
+4. **Changing project structure**
+   - New files created
+   - Files moved or renamed
+   - New folders added
+
+5. **Updating dependencies or tools**
+   - Package version changes
+   - New tools added
+   - Configuration modifications
+
+6. **Making architectural decisions**
+   - Why we chose approach A over approach B
+   - Trade-offs considered
+   - Future implications
+
+### Update Process
+
+1. **Read the current DEVELOPMENT_LOG.md** to understand its structure and tone
+2. **Identify which section needs updating:**
+   - Add new task sections in chronological order
+   - Update existing sections if changes affect previous work
+   - Add to "What We Learned" sections when appropriate
+3. **Write in an educational style:**
+   - Explain concepts as if teaching someone who has never coded
+   - Include "What is..." and "Why..." explanations
+   - Add code examples with detailed comments
+   - Break down technical jargon into simple terms
+4. **Maintain consistency:**
+   - Follow the existing format and structure
+   - Use similar heading styles and organization
+   - Keep the tone helpful and educational
+
+### Content Guidelines
+
+#### What to Include:
+- **Step-by-step explanations** of what was done
+- **Code snippets** with inline explanations
+- **Technical concepts** broken down simply
+- **Why decisions were made** (not just what was done)
+- **Errors encountered** and how they were fixed
+- **Lessons learned** from each phase
+- **File paths and line numbers** for reference
+
+#### What to Avoid:
+- Assuming technical knowledge
+- Skipping explanations of basic concepts
+- Using jargon without defining it
+- Leaving gaps in the chronological record
+- Omitting the "why" behind decisions
+
+### Example Update Format
+
+```markdown
+## Task X.X: [Task Name] ✅
+
+### What We Did
+[High-level summary of what was accomplished]
+
+### Changes Made
+
+#### 1. [Specific Change]
+**Changed from:** [Old state]
+**Changed to:** [New state]
+
+**Files affected:**
+- `path/to/file1.ts` - [What changed]
+- `path/to/file2.ts` - [What changed]
+
+**Why this matters:**
+[Explanation of the business/technical reason]
+
+**Technical detail:**
+```language
+// Code example with explanation
+```
+
+### What We Learned
+[Key takeaways and lessons from this work]
+
+---
+```
+
+### Reminder Checklist
+
+Before considering a task complete, verify:
+- [ ] DEVELOPMENT_LOG.md has been updated
+- [ ] New section added or existing section updated
+- [ ] All technical concepts explained simply
+- [ ] Code changes documented with examples
+- [ ] Lessons learned captured
+- [ ] File is still accurate (no outdated information)
+
+## Integration with Workflow
+
+**At the end of each coding session:**
+1. Review what code changes were made
+2. Update DEVELOPMENT_LOG.md accordingly
+3. Verify no sections have become outdated
+4. Ensure chronological flow is maintained
+
+**When user says "move to next task":**
+1. First update DEVELOPMENT_LOG.md for completed work
+2. Then proceed to next task
+
+**When making corrections:**
+1. Update both the code AND the log
+2. Document what was wrong and why
+3. Explain the correction
+
+## Why This Matters
+
+The DEVELOPMENT_LOG.md is:
+- **The user's learning resource** - They're learning to code through this project
+- **Historical record** - Documents decisions and evolution
+- **Onboarding tool** - Helps new contributors understand the project
+- **Reference guide** - Explains why things are the way they are
+
+An outdated or incomplete development log loses its value as a teaching tool.
+
+## Special Note
+
+The user explicitly stated: "This document is your holy grail and should be accurate for all times."
+
+Treat DEVELOPMENT_LOG.md updates with the same importance as code changes.

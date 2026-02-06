@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background (same as option 4) -->
+  <path d="M64 16L24 32V64C24 88.5 40 110.5 64 112C88 110.5 104 88.5 104 64V32L64 16Z" fill="#ff6b35"/>
+  
+  <!-- Outer circle (subtle) -->
+  <circle cx="64" cy="64" r="20" stroke="white" stroke-width="2.5" fill="none" opacity="0.8"/>
+  
+  <!-- Iris circle (filled) -->
+  <circle cx="64" cy="64" r="11" fill="white"/>
+  
+  <!-- Scanning arc (suggesting scan sweep) -->
+  <path d="M 54 64 A 10 10 0 0 1 74 64" stroke="#ff6b35" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Center dot -->
+  <circle cx="64" cy="64" r="4" fill="#ff6b35"/>
+</svg>

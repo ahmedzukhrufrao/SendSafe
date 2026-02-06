@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background (same as option 4) -->
+  <path d="M64 16L24 32V64C24 88.5 40 110.5 64 112C88 110.5 104 88.5 104 64V32L64 16Z" fill="#ff6b35"/>
+  
+  <!-- Eye shape (subtle horizontal oval) -->
+  <ellipse cx="64" cy="64" rx="18" ry="11" stroke="white" stroke-width="3" fill="none"/>
+  
+  <!-- Iris circle -->
+  <circle cx="64" cy="64" r="8" fill="white"/>
+  
+  <!-- Single clean scanning line -->
+  <line x1="50" y1="64" x2="78" y2="64" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Pupil -->
+  <circle cx="64" cy="64" r="3" fill="#ff6b35"/>
+</svg>

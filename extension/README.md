@@ -268,3 +268,8 @@ Check the output for type errors and fix them.
 - [Content Scripts Guide](https://developer.chrome.com/docs/extensions/mv3/content_scripts/)
 - [Service Workers in Extensions](https://developer.chrome.com/docs/extensions/mv3/service_workers/)
 
+
+
+
+
+

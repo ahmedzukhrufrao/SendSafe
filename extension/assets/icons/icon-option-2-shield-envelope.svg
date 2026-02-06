@@ -1,0 +1,12 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path d="M64 16L24 32V64C24 88.5 40 110.5 64 112C88 110.5 104 88.5 104 64V32L64 16Z" fill="#ff6b35"/>
+  <!-- Envelope -->
+  <rect x="40" y="50" width="48" height="36" rx="2" fill="white"/>
+  <path d="M40 50L64 68L88 50" stroke="#ff6b35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="40" y1="70" x2="88" y2="70" stroke="#ff6b35" stroke-width="2"/>
+</svg>
+
+
+
+

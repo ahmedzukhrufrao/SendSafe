@@ -33,7 +33,7 @@ export const config = {
    */
   api: {
     // The endpoint to call for AI detection
-    url: 'http://localhost:3000/api/check-ai-traces',
+    url: 'https://send-safe.vercel.app/api/check-ai-traces',
     
     // How long to wait for the API response before giving up (milliseconds)
     // 15 seconds = 15000 milliseconds
@@ -90,15 +90,28 @@ export const config = {
   // -------------------------------------------------------------------------
   
   /**
-   * How notifications behave
+   * How the alert modal behaves
+   * 
+   * NOTE: As of January 2026, we use in-page modals instead of Chrome
+   * system notifications. This gives us full control over styling and
+   * allows us to show more detailed information to users.
+   * 
+   * The modal appears in the top-right corner of Gmail with:
+   * - Dark theme (#1e1e2e background)
+   * - Orange accent (#ff6b35) for warning icon and button
+   * - Auto-dismiss after the configured duration
    */
+  modal: {
+    // How long modal stays visible before auto-dismiss (milliseconds)
+    // User can also dismiss manually via X button or "Got it" button
+    // 10000 = 10 seconds (matches previous notification behavior)
+    autoDismissMs: 10000,
+  },
+  
+  // Legacy config kept for backwards compatibility (not used for in-page modals)
+  // TODO: Remove this section in future version
   notifications: {
-    // How long notification stays visible (milliseconds)
-    // 0 = stays until user dismisses
-    // 10000 = 10 seconds (as per PRD FR-4.6)
     durationMs: 10000,
-    
-    // Icon to show in notifications
     iconPath: 'assets/icons/icon-128.png',
   },
   

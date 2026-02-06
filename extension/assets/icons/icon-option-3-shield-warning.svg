@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path d="M64 16L24 32V64C24 88.5 40 110.5 64 112C88 110.5 104 88.5 104 64V32L64 16Z" fill="#ff6b35"/>
+  <!-- Warning triangle -->
+  <path d="M64 40L50 70H78L64 40Z" fill="white"/>
+  <circle cx="64" cy="82" r="4" fill="#ff6b35"/>
+</svg>
+
+
+
+

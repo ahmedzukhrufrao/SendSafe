@@ -1,0 +1,36 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Very dark blue/black background -->
+  <rect width="128" height="128" fill="#0a0e1a"/>
+  
+  <!-- Shield with multi-layered concentric outlines -->
+  <!-- Outermost dark blue outline -->
+  <path d="M64 16L22 32V62C22 87 38 109 64 111C90 109 106 87 106 62V32L64 16Z" fill="none" stroke="#1a2a4a" stroke-width="3.5"/>
+  
+  <!-- Second layer outline (slightly lighter) -->
+  <path d="M64 18L24 33V62C24 85.5 40 107 64 109C88 107 104 85.5 104 62V33L64 18Z" fill="none" stroke="#2a3a5a" stroke-width="3"/>
+  
+  <!-- Third layer outline (medium blue) -->
+  <path d="M64 20L26 34V62C26 84 41 105 64 107C87 105 102 84 102 62V34L64 20Z" fill="none" stroke="#3a4a6a" stroke-width="2.5"/>
+  
+  <!-- Inner shield fill (dark blue) -->
+  <path d="M64 22L28 35V62C28 82.5 42 103 64 105C86 103 100 82.5 100 62V35L64 22Z" fill="#1a2a4a"/>
+  
+  <!-- Bright blue inner outline -->
+  <path d="M64 22L28 35V62C28 82.5 42 103 64 105C86 103 100 82.5 100 62V35L64 22Z" fill="none" stroke="#4a8aff" stroke-width="3"/>
+  
+  <!-- Four horizontal lines (bright electric blue) -->
+  <!-- Top line - shortest, centered -->
+  <line x1="52" y1="58" x2="60" y2="58" stroke="#4a8aff" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Second line - longer, left-aligned -->
+  <line x1="40" y1="66" x2="72" y2="66" stroke="#4a8aff" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Third line - longer, left-aligned -->
+  <line x1="40" y1="74" x2="80" y2="74" stroke="#4a8aff" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Fourth line - longest, left-aligned -->
+  <line x1="40" y1="82" x2="88" y2="82" stroke="#4a8aff" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Small bright blue dot above top line, offset to the right -->
+  <circle cx="66" cy="50" r="2.5" fill="#4a8aff"/>
+</svg>
